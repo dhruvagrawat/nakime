@@ -15,6 +15,10 @@ import ViewPresets from '@/components/ViewPresets';
 import KeyboardShortcuts from '@/components/KeyboardShortcuts';
 import GlobalStatusBar from '@/components/GlobalStatusBar';
 import LiveAlerts from '@/components/LiveAlerts';
+import SecurityAlertPanel from '@/components/SecurityAlertPanel';
+import SystemHealthPanel from '@/components/SystemHealthPanel';
+import EmployeePanel from '@/components/EmployeePanel';
+import NetworkTrafficPanel from '@/components/NetworkTrafficPanel';
 
 const NakimeMap = dynamic(() => import('@/components/NakimeMap'), { ssr: false });
 const LayerPanel = dynamic(() => import('@/components/LayerPanel'));
@@ -104,6 +108,11 @@ export default function Dashboard() {
   const [showIntel, setShowIntel] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [mobilePanel, setMobilePanel] = useState<'layers'|'markets'|'intel'|'search'|'recon'|null>(null);
+  // ── VOLT enterprise panels ──
+  const [showVoltSecurity,  setShowVoltSecurity]  = useState(true);
+  const [showVoltHealth,    setShowVoltHealth]    = useState(true);
+  const [showVoltEmployees, setShowVoltEmployees] = useState(true);
+  const [showVoltTraffic,   setShowVoltTraffic]   = useState(true);
   const [mapProjection, setMapProjection] = useState<'globe'|'mercator'>('globe');
   const [mapStyle, setMapStyle] = useState<'dark'|'satellite'>('dark');
   const [sweepData, setSweepData] = useState<any>(null);
@@ -136,6 +145,10 @@ export default function Dashboard() {
     war_alerts: false,
     gps_jamming: false,
     day_night: true,
+    // ── Volt enterprise layers ──
+    security_alerts: false,
+    employees: false,
+    system_health: false,
   });
   const [liveFeedUrl, setLiveFeedUrl] = useState<string | null>(null);
   const [liveFeedName, setLiveFeedName] = useState('');
@@ -372,6 +385,21 @@ export default function Dashboard() {
       fetchEndpoint('/api/gdelt', d => ({ gdelt: d.events }));
       layerFetchedRef.current.add('gdelt');
     }
+    // Volt: Security Alerts (Wazuh + Suricata)
+    if (activeLayers.security_alerts && !layerFetchedRef.current.has('security_alerts')) {
+      fetchEndpoint('/api/volt/alerts', d => ({ volt_alerts: d.alerts, volt_alert_stats: d.stats }));
+      layerFetchedRef.current.add('security_alerts');
+    }
+    // Volt: Employees
+    if (activeLayers.employees && !layerFetchedRef.current.has('employees')) {
+      fetchEndpoint('/api/volt/employees', d => ({ volt_employees: d.employees }));
+      layerFetchedRef.current.add('employees');
+    }
+    // Volt: System Health (Wazuh agents)
+    if (activeLayers.system_health && !layerFetchedRef.current.has('system_health')) {
+      fetchEndpoint('/api/volt/agents', d => ({ volt_agents: d.agents, volt_agent_counts: d.counts }));
+      layerFetchedRef.current.add('system_health');
+    }
 
   }, [activeLayers]);
 
@@ -390,6 +418,18 @@ export default function Dashboard() {
     }
     if (activeLayers.maritime) {
       intervals.push(setInterval(() => fetchEndpoint('/api/maritime', d => ({ maritime_ports: d.ports, maritime_chokepoints: d.chokepoints, maritime_ships: d.ships })), 10000)); // 10s
+    }
+    // Volt: poll security alerts every 10s when layer active
+    if (activeLayers.security_alerts) {
+      intervals.push(setInterval(() => fetchEndpoint('/api/volt/alerts', d => ({ volt_alerts: d.alerts, volt_alert_stats: d.stats })), 10_000));
+    }
+    // Volt: poll agents every 30s
+    if (activeLayers.system_health) {
+      intervals.push(setInterval(() => fetchEndpoint('/api/volt/agents', d => ({ volt_agents: d.agents, volt_agent_counts: d.counts })), 30_000));
+    }
+    // Volt: poll employee presence every 15s
+    if (activeLayers.employees) {
+      intervals.push(setInterval(() => fetchEndpoint('/api/volt/employees', d => ({ volt_employees: d.employees })), 15_000));
     }
     return () => intervals.forEach(clearInterval);
   }, [activeLayers, fetchEndpoint]);
@@ -762,6 +802,12 @@ export default function Dashboard() {
           setFlyToLocation({ lat: data.lat, lng: data.lng, ts: Date.now() });
         }} />
         <LiveAlerts data={data} onLocate={(lat, lng) => setFlyToLocation({ lat, lng, ts: Date.now() })} onWatchFeed={(url, name) => { setLiveFeedUrl(url); setLiveFeedName(name); }} />
+
+        {/* ── VOLT Enterprise Panels ── */}
+        {showVoltSecurity  && <SecurityAlertPanel />}
+        {showVoltHealth    && <SystemHealthPanel />}
+        {showVoltEmployees && <EmployeePanel onLocate={(lat, lng) => setFlyToLocation({ lat, lng, ts: Date.now() })} />}
+        {showVoltTraffic   && <NetworkTrafficPanel />}
       </div>
 
       {/* ── LIVE FEED VIEWER OVERLAY ── */}

@@ -1,11 +1,28 @@
-name: osiris
+name: nakime
 services:
-  osiris:
+  volt-server:
+    build:
+      context: ./volt-server
+      dockerfile: Dockerfile
+    container_name: volt-server
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: ./volt-server/.env
+        required: false
+    volumes:
+      # Mount host Suricata eve.json into the container (read-only)
+      - ${SURICATA_EVE_PATH:-/var/log/suricata/eve.json}:/var/log/suricata/eve.json:ro
+    restart: unless-stopped
+    networks:
+      - default
+
+  nakime:
     # Pulls the prebuilt image from GitHub Container Registry. The `build:`
     # block is kept as a fallback: `docker compose up -d` uses the registry
     # image if present/pullable, otherwise builds locally from the Dockerfile.
     # Run `docker compose pull` to fetch the latest published image.
-    image: ghcr.io/aiacos/osiris:latest
+    image: ghcr.io/dhruvagrawat/nakime:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -23,6 +40,9 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
+      - VOLT_SERVER_URL=http://volt-server:8000
+    depends_on:
+      - volt-server
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
