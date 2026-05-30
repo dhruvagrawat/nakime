@@ -1,6 +1,6 @@
 # NAKIME — Documentation Index
 
-> Branch: `research` — safe sandbox for exploration and notes
+> Branches: `research` (base docs) · `volt` (enterprise cybersecurity)
 
 | Document | What It Covers |
 |----------|---------------|
@@ -12,3 +12,4 @@
 | [DATA_SOURCES.md](DATA_SOURCES.md) | All external data sources, keyed vs keyless, freshness tiers |
 | [OPERATIONS.md](OPERATIONS.md) | Dev setup, env vars, Docker, Vercel, performance notes |
 | [RESEARCH_NOTES.md](RESEARCH_NOTES.md) | Known issues, open questions, improvement ideas, architecture risks |
+| [VOLT.md](VOLT.md) | Volt enterprise branch — Wazuh, Suricata, ntopng, Splunk, employee tracking, Docker setup |

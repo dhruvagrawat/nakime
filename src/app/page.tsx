@@ -107,12 +107,9 @@ export default function Dashboard() {
   const [showScmPanel, setShowScmPanel] = useState(true);
   const [showIntel, setShowIntel] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [mobilePanel, setMobilePanel] = useState<'layers'|'markets'|'intel'|'search'|'recon'|null>(null);
-  // ── VOLT enterprise panels ──
-  const [showVoltSecurity,  setShowVoltSecurity]  = useState(true);
-  const [showVoltHealth,    setShowVoltHealth]    = useState(true);
-  const [showVoltEmployees, setShowVoltEmployees] = useState(true);
-  const [showVoltTraffic,   setShowVoltTraffic]   = useState(true);
+  const [mobilePanel, setMobilePanel] = useState<'layers'|'markets'|'intel'|'search'|'recon'|'volt'|null>(null);
+  // ── VOLT enterprise mode — switches right panel from RECON to VOLT ──
+  const [voltMode, setVoltMode] = useState(false);
   const [mapProjection, setMapProjection] = useState<'globe'|'mercator'>('globe');
   const [mapStyle, setMapStyle] = useState<'dark'|'satellite'>('dark');
   const [sweepData, setSweepData] = useState<any>(null);
@@ -788,26 +785,68 @@ export default function Dashboard() {
         {showIntel && <IntelFeed data={data} onLocate={(lat, lng) => setFlyToLocation({ lat, lng, ts: Date.now() })} />}
       </div>
 
-      {/* ── RIGHT HUD (desktop): Search + RECON + Live Alerts ── */}
+      {/* ── RIGHT HUD (desktop): RECON / VOLT tab panel ── */}
       <div className="desktop-panel absolute right-5 top-20 bottom-24 w-80 flex flex-col gap-3 z-[200] pointer-events-auto overflow-y-auto styled-scrollbar pr-1">
+
+        {/* Search + Share always visible */}
         <div className="flex gap-2 items-start">
           <div className="flex-1"><SearchBar onLocate={(lat, lng) => setFlyToLocation({ lat, lng, ts: Date.now() })} /></div>
           <div className="relative"><SharePanel mapView={mapView} activeLayers={activeLayers} mouseCoords={null} /></div>
         </div>
-        <OsintPanel onSweepVisualize={setSweepData} onScanGeolocate={(target, data) => {
-          setScanTargets(prev => {
-            const existing = prev.filter(t => t.id !== target);
-            return [{ id: target, timestamp: Date.now(), ...data }, ...existing].slice(0, 10);
-          });
-          setFlyToLocation({ lat: data.lat, lng: data.lng, ts: Date.now() });
-        }} />
-        <LiveAlerts data={data} onLocate={(lat, lng) => setFlyToLocation({ lat, lng, ts: Date.now() })} onWatchFeed={(url, name) => { setLiveFeedUrl(url); setLiveFeedName(name); }} />
 
-        {/* ── VOLT Enterprise Panels ── */}
-        {showVoltSecurity  && <SecurityAlertPanel />}
-        {showVoltHealth    && <SystemHealthPanel />}
-        {showVoltEmployees && <EmployeePanel onLocate={(lat, lng) => setFlyToLocation({ lat, lng, ts: Date.now() })} />}
-        {showVoltTraffic   && <NetworkTrafficPanel />}
+        {/* ── RECON / VOLT mode switcher ── */}
+        <div className="glass-panel p-0.5 flex gap-0.5 flex-shrink-0">
+          <button
+            onClick={() => setVoltMode(false)}
+            className="flex-1 py-1.5 rounded text-[10px] font-mono font-bold tracking-[0.15em] transition-all"
+            style={{
+              background: !voltMode ? 'rgba(0,229,255,0.12)' : 'transparent',
+              color: !voltMode ? 'var(--cyan-primary)' : 'var(--text-muted)',
+              border: `1px solid ${!voltMode ? 'rgba(0,229,255,0.3)' : 'transparent'}`,
+            }}
+          >
+            RECON
+          </button>
+          <button
+            onClick={() => setVoltMode(true)}
+            className="flex-1 py-1.5 rounded text-[10px] font-mono font-bold tracking-[0.15em] transition-all relative shrink-0"
+            style={{
+              background: voltMode ? 'rgba(212,175,55,0.12)' : 'transparent',
+              color: voltMode ? 'var(--gold-primary)' : 'var(--text-muted)',
+              border: `1px solid ${voltMode ? 'rgba(212,175,55,0.3)' : 'transparent'}`,
+            }}
+          >
+            VOLT ENTERPRISE
+            {/* Pulse dot when there are critical/high alerts */}
+            {((data as any).volt_alert_stats?.critical > 0 || (data as any).volt_alert_stats?.high > 0) && (
+              <span className="absolute top-1 right-2 w-1.5 h-1.5 rounded-full bg-(--alert-red) animate-osiris-pulse" />
+            )}
+          </button>
+        </div>
+
+        {/* ── RECON mode panels ── */}
+        {!voltMode && (
+          <>
+            <OsintPanel onSweepVisualize={setSweepData} onScanGeolocate={(target, scanData) => {
+              setScanTargets(prev => {
+                const existing = prev.filter(t => t.id !== target);
+                return [{ id: target, timestamp: Date.now(), ...scanData }, ...existing].slice(0, 10);
+              });
+              setFlyToLocation({ lat: scanData.lat, lng: scanData.lng, ts: Date.now() });
+            }} />
+            <LiveAlerts data={data} onLocate={(lat, lng) => setFlyToLocation({ lat, lng, ts: Date.now() })} onWatchFeed={(url, name) => { setLiveFeedUrl(url); setLiveFeedName(name); }} />
+          </>
+        )}
+
+        {/* ── VOLT Enterprise panels ── */}
+        {voltMode && (
+          <>
+            <SecurityAlertPanel />
+            <SystemHealthPanel />
+            <EmployeePanel onLocate={(lat, lng) => setFlyToLocation({ lat, lng, ts: Date.now() })} />
+            <NetworkTrafficPanel />
+          </>
+        )}
       </div>
 
       {/* ── LIVE FEED VIEWER OVERLAY ── */}

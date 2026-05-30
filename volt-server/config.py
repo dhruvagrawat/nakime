@@ -18,4 +18,8 @@ class Settings:
     port: int = int(os.getenv("VOLT_PORT", "8000"))
     cors_origins: str = os.getenv("VOLT_CORS_ORIGINS", "*")
 
+    # When true, all routers return realistic sample data instead of
+    # connecting to real tools. Ideal for demos and development.
+    use_sample_data: bool = os.getenv("USE_SAMPLE_DATA", "false").lower() == "true"
+
 settings = Settings()

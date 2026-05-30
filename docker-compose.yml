@@ -1,5 +1,10 @@
 name: nakime
 services:
+
+  # ── Volt Security Backend (Python FastAPI) ──────────────────────────────────
+  # Provides Wazuh, Suricata, ntopng, Splunk, employee, and health APIs.
+  # Set USE_SAMPLE_DATA=true to run with demo data (no real tools required).
+  # Set USE_SAMPLE_DATA=false and configure tools in volt-server/.env for prod.
   volt-server:
     build:
       context: ./volt-server
@@ -10,28 +15,29 @@ services:
     env_file:
       - path: ./volt-server/.env
         required: false
-    volumes:
-      # Mount host Suricata eve.json into the container (read-only)
-      - ${SURICATA_EVE_PATH:-/var/log/suricata/eve.json}:/var/log/suricata/eve.json:ro
+    environment:
+      - USE_SAMPLE_DATA=true          # flip to false when real tools are ready
+      # Uncomment and fill in when connecting real tools:
+      # - WAZUH_URL=https://your-wazuh:55000
+      # - WAZUH_USER=wazuh-wui
+      # - WAZUH_PASS=changeme
+      # - NTOPNG_URL=http://your-ntopng:3000
+      # - SURICATA_EVE_PATH=/var/log/suricata/eve.json
+    # If Suricata is installed on this host, uncomment to stream live alerts:
+    # volumes:
+    #   - /var/log/suricata/eve.json:/var/log/suricata/eve.json:ro
     restart: unless-stopped
     networks:
-      - default
+      - nakime_net
 
+  # ── Nakime Web UI (Next.js) ─────────────────────────────────────────────────
   nakime:
-    # Pulls the prebuilt image from GitHub Container Registry. The `build:`
-    # block is kept as a fallback: `docker compose up -d` uses the registry
-    # image if present/pullable, otherwise builds locally from the Dockerfile.
-    # Run `docker compose pull` to fetch the latest published image.
-    image: ghcr.io/dhruvagrawat/nakime:latest
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: osiris
-    # Host port is configurable via NAKIME_PORT in .env (defaults to 3000).
+    container_name: nakime
     ports:
       - "${NAKIME_PORT:-3000}:3000"
-    # Optional API keys / scanner backend — copy .env.template to .env and
-    # fill in what you need. Missing file is ignored (keyless feeds still work).
     env_file:
       - path: .env
         required: false
@@ -47,38 +53,33 @@ services:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
     networks:
-      - default
-      - umami_default
+      - nakime_net
 
 networks:
-  umami_default:
-    external: true
+  nakime_net:
+    driver: bridge
 
 # ── CasaOS app-store metadata (ignored by plain Docker Compose) ──
 x-casaos:
   architectures:
     - amd64
     - arm64
-  main: osiris
-  author: simplifaisoul
-  developer: simplifaisoul
+  main: nakime
+  author: dhruvagrawat
+  developer: dhruvagrawat
   category: Network
   description:
     en_us: >-
-      OSIRIS is a production-grade open-source OSINT situational-awareness
-      dashboard. It aggregates real-time global intelligence across aviation,
-      maritime, CCTV networks, seismic activity, wildfires, news feeds,
-      weather, space weather, cyber threats (CVEs) and conflict zones into a
-      single GPU-accelerated MapLibre interface. Most features work with no
-      API keys.
+      NAKIME is an enterprise-grade open-source OSINT and cybersecurity
+      situational-awareness platform. The Volt branch adds Wazuh SIEM,
+      Suricata IDS, ntopng traffic analysis, employee tracking, and system
+      health dashboards on top of the global intelligence map.
   tagline:
-    en_us: Real-time global OSINT intelligence dashboard
+    en_us: Global intelligence + enterprise cybersecurity platform
   title:
-    en_us: OSIRIS
-  icon: https://raw.githubusercontent.com/Aiacos/osiris/master/public/casaos-icon.png
-  thumbnail: https://raw.githubusercontent.com/Aiacos/osiris/master/public/og-image.png
-  screenshot_link:
-    - https://raw.githubusercontent.com/Aiacos/osiris/master/public/og-image.png
+    en_us: NAKIME
+  icon: https://raw.githubusercontent.com/dhruvagrawat/nakime/master/public/casaos-icon.png
+  thumbnail: https://raw.githubusercontent.com/dhruvagrawat/nakime/master/public/og-image.png
   scheme: http
   hostname: ""
   port_map: "3000"
@@ -87,26 +88,23 @@ x-casaos:
   envs:
     - container: SCANNER_URL
       description:
-        en_us: "(Optional) RECON scanner backend URL, e.g. http://scanner:7700"
+        en_us: "(Optional) RECON scanner backend URL"
     - container: SCANNER_KEY
       description:
-        en_us: "(Optional) RECON scanner shared secret (must match backend OSIRIS_KEY)."
+        en_us: "(Optional) RECON scanner shared secret"
     - container: FIRMS_API_KEY
       description:
-        en_us: "(Optional) NASA FIRMS API key for active-fire data."
+        en_us: "(Optional) NASA FIRMS API key for active-fire data"
     - container: AIS_API_KEY
       description:
-        en_us: "(Optional) aisstream.io key for maritime vessel tracking."
-    - container: OPENSKY_CLIENT_ID
+        en_us: "(Optional) aisstream.io key for maritime vessel tracking"
+    - container: GEMINI_API_KEY
       description:
-        en_us: "(Optional) OpenSky OAuth2 client id for higher aircraft rate limits."
-    - container: OPENSKY_CLIENT_SECRET
-      description:
-        en_us: "(Optional) OpenSky OAuth2 client secret."
-    - container: N2YO_API_KEY
-      description:
-        en_us: "(Optional) N2YO key for satellite tracking."
+        en_us: "(Optional) Google Gemini key for AI analyst"
   ports:
     - container: "3000"
       description:
-        en_us: "Web UI (HTTP)."
+        en_us: "Nakime Web UI (HTTP)"
+    - container: "8000"
+      description:
+        en_us: "Volt Security Backend API"

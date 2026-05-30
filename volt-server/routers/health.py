@@ -4,17 +4,11 @@ from typing import Any
 
 import httpx
 from fastapi import APIRouter
-from pydantic import BaseModel
+
+from config import settings
+import sample_data as demo
 
 router = APIRouter()
-
-
-class ServiceDef(BaseModel):
-    name: str
-    url: str
-    method: str = "GET"
-    timeout: float = 5.0
-    expected_status: int = 200
 
 
 async def _check(svc: dict[str, Any]) -> dict[str, Any]:
@@ -29,9 +23,8 @@ async def _check(svc: dict[str, Any]) -> dict[str, Any]:
             fn = client.head if method == "HEAD" else client.get
             r = await fn(url)
             latency = round((time.monotonic() - start) * 1000, 1)
-            if r.status_code < 500:
-                return {"name": name, "url": url, "status": "UP", "http_status": r.status_code, "latency_ms": latency}
-            return {"name": name, "url": url, "status": "DEGRADED", "http_status": r.status_code, "latency_ms": latency}
+            status = "UP" if r.status_code < 500 else "DEGRADED"
+            return {"name": name, "url": url, "status": status, "http_status": r.status_code, "latency_ms": latency}
     except httpx.TimeoutException:
         return {"name": name, "url": url, "status": "TIMEOUT", "latency_ms": None}
     except httpx.ConnectError:
@@ -42,6 +35,8 @@ async def _check(svc: dict[str, Any]) -> dict[str, Any]:
 
 @router.post("/check")
 async def check(services: list[dict[str, Any]]):
+    if settings.use_sample_data:
+        return {**demo.HEALTH_RESULTS, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     results = list(await asyncio.gather(*[_check(s) for s in services]))
     up = sum(1 for r in results if r["status"] == "UP")
     total = len(results)
@@ -59,5 +54,4 @@ async def check(services: list[dict[str, Any]]):
 
 @router.get("/ping")
 async def ping():
-    """Ping the volt-server itself — lightweight liveness probe."""
-    return {"ok": True, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+    return {"ok": True, "sample_data": settings.use_sample_data, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}

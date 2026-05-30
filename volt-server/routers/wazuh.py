@@ -1,12 +1,12 @@
 import time
 import httpx
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Query
 
 from config import settings
+import sample_data as demo
 
 router = APIRouter()
 
-# JWT cache — Wazuh tokens expire in 900s by default
 _jwt: dict = {"token": None, "expires": 0.0}
 
 
@@ -21,7 +21,7 @@ async def _get_token() -> str:
         r.raise_for_status()
         token = r.json()["data"]["token"]
         _jwt["token"] = token
-        _jwt["expires"] = time.time() + 800  # refresh before actual expiry
+        _jwt["expires"] = time.time() + 800
         return token
 
 
@@ -39,25 +39,29 @@ async def _wazuh(path: str, params: dict | None = None) -> dict:
 
 @router.get("/agents")
 async def agents(limit: int = Query(500, ge=1, le=500)):
+    if settings.use_sample_data:
+        return demo.WAZUH_AGENTS
     try:
-        data = await _wazuh("/agents", {
+        return await _wazuh("/agents", {
             "limit": limit,
             "select": "id,name,status,ip,os,lastKeepAlive,version,registerIP",
         })
-        return data
     except Exception as exc:
-        return {"data": {"affected_items": [], "total_affected_items": 0}, "error": str(exc)}
+        return demo.WAZUH_AGENTS if settings.use_sample_data else {
+            "data": {"affected_items": [], "total_affected_items": 0}, "error": str(exc)
+        }
 
 
 @router.get("/alerts")
 async def alerts(limit: int = Query(50, ge=1, le=500)):
+    if settings.use_sample_data:
+        return demo.WAZUH_ALERTS
     try:
-        # /security/events is the unified endpoint in Wazuh 4.7+
         data = await _wazuh("/security/events", {"limit": limit})
         return data
     except httpx.HTTPStatusError as exc:
         if exc.response.status_code == 404:
-            return {"data": {"affected_items": []}, "error": "events endpoint unavailable"}
+            return {"data": {"affected_items": []}, "error": "events endpoint unavailable (Wazuh < 4.7?)"}
         return {"data": {"affected_items": []}, "error": str(exc)}
     except Exception as exc:
         return {"data": {"affected_items": []}, "error": str(exc)}
@@ -65,6 +69,8 @@ async def alerts(limit: int = Query(50, ge=1, le=500)):
 
 @router.get("/stats")
 async def stats():
+    if settings.use_sample_data:
+        return demo.WAZUH_STATS
     try:
         return await _wazuh("/manager/stats")
     except Exception as exc:
@@ -81,9 +87,9 @@ async def vulnerabilities(agent_id: str, limit: int = Query(100, ge=1, le=500)):
 
 @router.get("/summary")
 async def summary():
-    """Quick agent-count summary — safe to poll frequently."""
+    if settings.use_sample_data:
+        return demo.WAZUH_SUMMARY
     try:
-        data = await _wazuh("/agents/summary/status")
-        return data
+        return await _wazuh("/agents/summary/status")
     except Exception as exc:
         return {"data": {}, "error": str(exc)}

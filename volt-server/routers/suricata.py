@@ -3,10 +3,11 @@ import os
 from fastapi import APIRouter, Query
 
 from config import settings
+import sample_data as demo
 
 router = APIRouter()
 
-TAIL_BYTES = 300_000  # how much of eve.json to read from the end
+TAIL_BYTES = 300_000
 
 
 def _tail_eve(max_bytes: int = TAIL_BYTES) -> list[str]:
@@ -23,6 +24,9 @@ def _tail_eve(max_bytes: int = TAIL_BYTES) -> list[str]:
 
 @router.get("/alerts")
 async def alerts(limit: int = Query(100, ge=1, le=1000)):
+    if settings.use_sample_data:
+        return {**demo.SURICATA_ALERTS, "alerts": demo.SURICATA_ALERTS["alerts"][:limit]}
+
     lines = _tail_eve()
     if not lines:
         path = settings.suricata_eve_path
@@ -38,7 +42,7 @@ async def alerts(limit: int = Query(100, ge=1, le=1000)):
             continue
         if ev.get("event_type") != "alert":
             continue
-        alert_block = ev.get("alert", {})
+        ab = ev.get("alert", {})
         results.append({
             "timestamp": ev.get("timestamp"),
             "src_ip": ev.get("src_ip"),
@@ -47,12 +51,11 @@ async def alerts(limit: int = Query(100, ge=1, le=1000)):
             "dest_port": ev.get("dest_port"),
             "proto": ev.get("proto"),
             "app_proto": ev.get("app_proto"),
-            "severity": alert_block.get("severity", 3),
-            "signature": alert_block.get("signature", ""),
-            "signature_id": alert_block.get("signature_id"),
-            "category": alert_block.get("category", ""),
-            "action": alert_block.get("action", "allowed"),
-            "metadata": alert_block.get("metadata", {}),
+            "severity": ab.get("severity", 3),
+            "signature": ab.get("signature", ""),
+            "signature_id": ab.get("signature_id"),
+            "category": ab.get("category", ""),
+            "action": ab.get("action", "allowed"),
         })
 
     return {"alerts": results, "count": len(results)}
@@ -60,6 +63,9 @@ async def alerts(limit: int = Query(100, ge=1, le=1000)):
 
 @router.get("/stats")
 async def stats():
+    if settings.use_sample_data:
+        return demo.SURICATA_STATS
+
     lines = _tail_eve(max_bytes=600_000)
     for line in reversed(lines):
         try:
@@ -74,19 +80,18 @@ async def stats():
                 "capture": s.get("capture", {}),
                 "decoder": s.get("decoder", {}),
                 "flow": s.get("flow", {}),
-                "detect": {
-                    "alert": s.get("detect", {}).get("alert", 0),
-                    "engines": s.get("detect", {}).get("engines", []),
-                },
+                "detect": {"alert": s.get("detect", {}).get("alert", 0)},
                 "dns": s.get("dns", {}),
                 "http": s.get("http", {}),
             }
-    path = settings.suricata_eve_path
-    return {"error": f"No stats event found in last {TAIL_BYTES // 1024}KB of {path}"}
+    return {"error": f"No stats event found in {settings.suricata_eve_path}"}
 
 
 @router.get("/flows")
 async def flows(limit: int = Query(50, ge=1, le=500)):
+    if settings.use_sample_data:
+        return {"flows": [], "count": 0, "note": "sample mode — no flow data"}
+
     lines = _tail_eve()
     results = []
     for line in reversed(lines):
@@ -112,6 +117,5 @@ async def flows(limit: int = Query(50, ge=1, le=500)):
             "pkts_toserver": flow.get("pkts_toserver", 0),
             "pkts_toclient": flow.get("pkts_toclient", 0),
             "state": flow.get("state"),
-            "reason": flow.get("reason"),
         })
     return {"flows": results, "count": len(results)}
