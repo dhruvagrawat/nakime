@@ -1,4 +1,4 @@
-# OSIRIS — RECON / OSINT Toolkit
+# NAKIME — RECON / OSINT Toolkit
 
 The RECON toolkit lives in `src/components/OsintPanel.tsx` and calls `src/app/api/osint/*` routes.
 

@@ -1,4 +1,4 @@
-# OSIRIS — API Route Reference
+# NAKIME — API Route Reference
 
 All routes are under `/src/app/api/`. Unless noted they are `GET` only.
 

@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⬡ OSIRIS
+# ⬡ NAKIME
 
 ### Open Source Intelligence & Reconnaissance Integrated System
 
@@ -11,7 +11,7 @@
 [![MapLibre](https://img.shields.io/badge/MapLibre_GL-GPU_Rendered-396CB2?style=for-the-badge)](https://maplibre.org)
 [![License](https://img.shields.io/badge/License-MIT-D4AF37?style=for-the-badge)](LICENSE)
 
-**A real-time global intelligence dashboard that aggregates live flight tracking, CCTV networks, earthquake monitoring, conflict zone mapping, and 24/7 news feeds into a single GPU-accelerated interface.**
+**NAKIME is a real-time global intelligence dashboard that aggregates live flight tracking, CCTV networks, earthquake monitoring, conflict zone mapping, and 24/7 news feeds into a single GPU-accelerated interface.**
 
 [Live Demo](https://osirisai.live) · [Report Bug](https://github.com/simplifaisoul/osiris/issues) · [Request Feature](https://github.com/simplifaisoul/osiris/issues) · [Join Discord](https://discord.gg/umBykEpb98)
 
@@ -21,7 +21,7 @@
 
 ## Overview
 
-Osiris is a production-grade OSINT platform that provides situational awareness across multiple intelligence domains. Built with Next.js 16 and MapLibre GL, every data point is rendered via WebGL for 60fps performance even with thousands of concurrent entities on-screen.
+Nakime is a production-grade OSINT platform that provides situational awareness across multiple intelligence domains. Built with Next.js 16 and MapLibre GL, every data point is rendered via WebGL for 60fps performance even with thousands of concurrent entities on-screen.
 
 ### Key Capabilities
 
@@ -47,7 +47,7 @@ Osiris is a production-grade OSINT platform that provides situational awareness 
 
 ```
 ┌─────────────────────────────────────────────────┐
-│                  OSIRIS CLIENT                   │
+│                  NAKIME CLIENT                   │
 │  ┌──────────┐  ┌──────────┐  ┌───────────────┐ │
 │  │ MapLibre  │  │  HUD     │  │  RECON Toolkit│ │
 │  │  GL (GPU) │  │ Panels   │  │  Port Scan    │ │
@@ -162,22 +162,22 @@ docker pull ghcr.io/aiacos/osiris:latest
 docker run -d -p 3000:3000 --env-file .env ghcr.io/aiacos/osiris:latest
 ```
 
-**Custom port** — the container always listens on `3000`; set `OSIRIS_PORT` in
-`.env` to change the published host port (e.g. `OSIRIS_PORT=3005`) without
+**Custom port** — the container always listens on `3000`; set `NAKIME_PORT` in
+`.env` to change the published host port (e.g. `NAKIME_PORT=3005`) without
 editing the compose file.
 
 ### Environment Variables
 
-OSIRIS works **partially without any API keys** — all core feeds use public,
+NAKIME works **partially without any API keys** — all core feeds use public,
 keyless sources. Copy [`.env.template`](.env.template) to `.env` and set only
 what you need:
 
 ```env
 # Published host port (container always listens on 3000). Default: 3000
-OSIRIS_PORT=3000
+NAKIME_PORT=3000
 
 # RECON scanner backend (the only vars the current code reads).
-# SCANNER_KEY must match the backend's OSIRIS_KEY — generate with: openssl rand -hex 32
+# SCANNER_KEY must match the backend's NAKIME_KEY — generate with: openssl rand -hex 32
 SCANNER_URL=
 SCANNER_KEY=
 
@@ -228,12 +228,12 @@ MIT — see [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-**🛠️ SUPPORT THE OSIRIS PROJECT**
-The OSIRIS Global Intelligence Grid is entirely open-source, but running the backend scanners and data firehoses isn't cheap.
+**🛠️ SUPPORT THE NAKIME PROJECT**
+The NAKIME Global Intelligence Grid is entirely open-source, but running the backend scanners and data firehoses isn't cheap.
 
-If you want to help keep the servers alive, and support us to get access to better tools  unlock the **Special OSIRIS Console**, Currently Just a Cool UI. a you can officially support the project here : 
+If you want to help keep the servers alive, and support us to get access to better tools  unlock the **Special NAKIME Console**, Currently Just a Cool UI. a you can officially support the project here : 
 
-🔗 [Support OSIRIS on Patreon](https://www.patreon.com/posts/159077425)
+🔗 [Support NAKIME on Patreon](https://www.patreon.com/posts/159077425)
 
 *Supporters receive the `🔴 RedTeam Console` role and access to encrypted developer comms.*
 

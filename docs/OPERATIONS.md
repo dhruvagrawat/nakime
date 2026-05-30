@@ -1,4 +1,4 @@
-# OSIRIS — Operations Guide
+# NAKIME — Operations Guide
 
 ---
 
@@ -22,9 +22,9 @@ Copy `.env.template` → `.env`. Only the scanner keys are strictly required for
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `OSIRIS_PORT` | No (default: 3000) | Published host port for Docker |
+| `NAKIME_PORT` | No (default: 3000) | Published host port for Docker |
 | `SCANNER_URL` | For port scanner | URL of external scanner backend |
-| `SCANNER_KEY` | For port scanner | Shared secret — must match backend `OSIRIS_KEY` |
+| `SCANNER_KEY` | For port scanner | Shared secret — must match backend `NAKIME_KEY` |
 | `FIRMS_API_KEY` | No | NASA FIRMS fire data higher rate limits |
 | `OPENSKY_CLIENT_ID` | No | OpenSky OAuth2 (since Mar 2025) |
 | `OPENSKY_CLIENT_SECRET` | No | OpenSky OAuth2 |
@@ -49,7 +49,7 @@ docker pull ghcr.io/aiacos/osiris:latest
 docker run -d -p 3000:3000 --env-file .env ghcr.io/aiacos/osiris:latest
 
 # Custom host port (container always binds 3000)
-OSIRIS_PORT=3005 docker compose up -d
+NAKIME_PORT=3005 docker compose up -d
 ```
 
 See `DOCKER.md` for full CasaOS and compose documentation.

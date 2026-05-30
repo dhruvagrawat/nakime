@@ -1,4 +1,4 @@
-# OSIRIS — Documentation Index
+# NAKIME — Documentation Index
 
 > Branch: `research` — safe sandbox for exploration and notes
 

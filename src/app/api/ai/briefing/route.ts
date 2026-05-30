@@ -201,7 +201,7 @@ export async function POST(
       );
     }
 
-    console.error('[OSIRIS AI] Briefing error:', message);
+    console.error('[NAKIME AI] Briefing error:', message);
     return NextResponse.json(
       { error: 'Briefing generation failed. Please try again.', code: 'BRIEFING_FAILED' },
       { status: 500 }

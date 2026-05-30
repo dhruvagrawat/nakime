@@ -1,4 +1,4 @@
-# OSIRIS — Component Reference
+# NAKIME — Component Reference
 
 All components live in `src/components/`. They are all client-side (`'use client'`).
 
@@ -6,7 +6,7 @@ All components live in `src/components/`. They are all client-side (`'use client
 
 ## Core Layout
 
-### `OsirisMap.tsx`
+### `NakimeMap.tsx`
 The GPU-rendered map. Uses raw `maplibre-gl` (not the react-map-gl abstraction).
 
 **Props:**

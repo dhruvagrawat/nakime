@@ -88,7 +88,7 @@ export async function GET() {
       fetch('https://api.weather.gov/alerts/active?status=actual&message_type=alert', {
         headers: {
           Accept: 'application/geo+json',
-          'User-Agent': 'OSIRIS Severe Weather Layer',
+          'User-Agent': 'NAKIME Severe Weather Layer',
         },
         signal: AbortSignal.timeout(10000),
       }),

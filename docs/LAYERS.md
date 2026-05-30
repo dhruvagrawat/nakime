@@ -1,4 +1,4 @@
-# OSIRIS — Map Layers Reference
+# NAKIME — Map Layers Reference
 
 19 toggleable layers. State lives in `activeLayers` in `page.tsx`. Layers are grouped visually in `LayerPanel.tsx`.
 
@@ -80,7 +80,7 @@ Source: `src/app/api/flights/route.ts: classifyFlight()`
 
 ## Day/Night Overlay
 
-Computed entirely client-side via `computeSolarTerminator()` in `OsirisMap.tsx`. Uses:
+Computed entirely client-side via `computeSolarTerminator()` in `NakimeMap.tsx`. Uses:
 - Day-of-year declination: `−23.44 × cos(2π/365 × (doy + 10))`
 - Sub-solar longitude from UTC hours
 - 181 longitude points sampled at 2° intervals

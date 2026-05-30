@@ -1,4 +1,4 @@
-# OSIRIS — Research Notes & Ideas
+# NAKIME — Research Notes & Ideas
 
 This file is for tracking research, open questions, potential improvements, and things to investigate.
 Update this as we work through the project.

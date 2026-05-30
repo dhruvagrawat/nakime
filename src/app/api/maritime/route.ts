@@ -142,8 +142,8 @@ function connectAisStream() {
     ws.send(JSON.stringify(subscriptionMessage));
   });
 
-  // Map AIS ship types to OSIRIS categories
-  const getOsirisShipType = (typeCode: number) => {
+  // Map AIS ship types to Nakime categories
+  const getShipType = (typeCode: number) => {
     if (!typeCode) return 'cargo';
     if (typeCode >= 80 && typeCode <= 89) return 'tanker';
     if (typeCode >= 70 && typeCode <= 79) return 'cargo';
@@ -178,7 +178,7 @@ function connectAisStream() {
         const staticData = parsed.Message.ShipStaticData;
         existing.name = staticData.Name ? staticData.Name.trim() : existing.name;
         existing.destination = staticData.Destination ? staticData.Destination.trim() : existing.destination;
-        existing.type = getOsirisShipType(staticData.Type);
+        existing.type = getShipType(staticData.Type);
       }
 
       // Only store if we have coordinates

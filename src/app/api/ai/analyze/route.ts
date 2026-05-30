@@ -219,7 +219,7 @@ export async function POST(
       );
     }
 
-    console.error('[OSIRIS AI] Analysis error:', message);
+    console.error('[NAKIME AI] Analysis error:', message);
     return NextResponse.json(
       { error: 'Intelligence analysis failed. Please try again.', code: 'ANALYSIS_FAILED' },
       { status: 500 }

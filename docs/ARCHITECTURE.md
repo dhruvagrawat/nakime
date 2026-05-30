@@ -1,4 +1,4 @@
-# OSIRIS — Architecture Overview
+# NAKIME — Architecture Overview
 
 **Version:** V4.2  
 **Stack:** Next.js 16 (App Router) · TypeScript 5 · MapLibre GL JS · Framer Motion · Tailwind CSS v4
@@ -10,7 +10,7 @@
 ```
 Browser (Client)
   └── page.tsx (Dashboard)           ← single-page app shell, all state lives here
-        ├── OsirisMap (WebGL/GPU)    ← MapLibre GL, canvas-only, zero DOM elements per entity
+        ├── NakimeMap (WebGL/GPU)    ← MapLibre GL, canvas-only, zero DOM elements per entity
         ├── LayerPanel               ← toggle 19 data layers
         ├── OsintPanel (RECON)       ← 17-tab OSINT toolkit
         ├── IntelFeed                ← news + threat scroll
@@ -58,7 +58,7 @@ All UI state (active layers, panels, fly-to target, live feed URL, region dossie
 Layers default to OFF. When a layer is toggled ON for the first time `layerFetchedRef.current.add(key)` marks it fetched. Subsequent toggles do **not** refetch — data stays in `dataRef` until the page is refreshed. Layer-specific polling (e.g., maritime at 10s, flights at 5 min) only starts when that layer is active.
 
 ### 3. GPU-Only Map Rendering
-`OsirisMap.tsx` uses raw `maplibre-gl` (not the react-map-gl wrapper) to avoid reconciler overhead. Every entity type (flights, satellites, CCTV dots, earthquake circles, conflict zones, etc.) is a MapLibre `GeoJSON` source + symbol/circle/fill layer. Aircraft icons and dots are rendered as `Uint8Array` pixel buffers via canvas and registered with `map.addImage()`. No DOM markers are used for entities.
+`NakimeMap.tsx` uses raw `maplibre-gl` (not the react-map-gl wrapper) to avoid reconciler overhead. Every entity type (flights, satellites, CCTV dots, earthquake circles, conflict zones, etc.) is a MapLibre `GeoJSON` source + symbol/circle/fill layer. Aircraft icons and dots are rendered as `Uint8Array` pixel buffers via canvas and registered with `map.addImage()`. No DOM markers are used for entities.
 
 ### 4. SSRF Defense
 Any route that takes a user-supplied host/IP for outbound requests goes through `src/lib/ssrf-guard.ts`. It validates:
@@ -86,7 +86,7 @@ User toggles layer ON
           → NextResponse.json({ ... })
       → dataRef.current = { ...dataRef.current, ...newData }
       → setDataVersion(v+1)                  ← triggers re-render
-  → OsirisMap receives updated `data` prop
+  → NakimeMap receives updated `data` prop
       → GeoJSON source setData()             ← GPU re-renders affected layers
 ```
 
