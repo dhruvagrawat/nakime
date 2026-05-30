@@ -42,3 +42,5 @@ scanner/
 
 # Security - prevent accidental backup commits
 scanner_backend_backup.js
+volt-server/__pycache__/
+volt-server/routers/__pycache__/
