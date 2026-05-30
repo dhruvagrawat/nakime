@@ -109,7 +109,7 @@ function NakimeMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
       createDot(map, 'dot-cctv', '#39FF14', 10);
 
       // Sources
-      const sources = ['flights','military','jets','private-fl','satellites','earthquakes','gdelt','gps-jamming','day-night','cctv','fires','weather','infrastructure','maritime','maritime-choke','maritime-ships','live-news','sigint-news','conflict-zones', 'war-alerts-targets', 'war-alerts-lines', 'balloons', 'radiation', 'ip-sweep-devices', 'ip-sweep-pulse', 'ip-sweep-connections', 'scan-targets'];
+      const sources = ['flights','military','jets','private-fl','satellites','earthquakes','gdelt','gps-jamming','day-night','cctv','fires','weather','infrastructure','maritime','maritime-choke','maritime-ships','live-news','sigint-news','conflict-zones', 'war-alerts-targets', 'war-alerts-lines', 'balloons', 'radiation', 'ip-sweep-devices', 'ip-sweep-pulse', 'ip-sweep-connections', 'scan-targets', 'adani-assets'];
       sources.forEach(s => map.addSource(s, { type: 'geojson', data: EMPTY_FC }));
 
       // Warning icon generator (parameterized — eliminates 3x copy-paste)
@@ -185,6 +185,34 @@ function NakimeMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
         'text-field': ['get','name'], 'text-size': 9, 'text-font': ['Open Sans Regular'],
         'text-offset': [0, 1.8], 'text-max-width': 12, 'text-allow-overlap': false,
       }, paint: { 'text-color': '#39FF14', 'text-halo-color': '#000', 'text-halo-width': 1, 'text-opacity': 0.7 }});
+
+      // ── ADANI ASSETS (company infrastructure markers) ──────────────────────
+      // Outer glow — pulses on hover
+      map.addLayer({ id: 'adani-glow', type: 'circle', source: 'adani-assets', paint: {
+        'circle-radius': ['interpolate',['linear'],['zoom'], 2,10, 6,16, 10,22],
+        'circle-color': ['get','color'],
+        'circle-opacity': 0.10, 'circle-blur': 1,
+      }});
+      // Main dot — coloured by asset type
+      map.addLayer({ id: 'adani-dots', type: 'circle', source: 'adani-assets', paint: {
+        'circle-radius': ['interpolate',['linear'],['zoom'], 2,4, 6,7, 10,10],
+        'circle-color': ['get','color'],
+        'circle-opacity': 0.95,
+        'circle-stroke-width': 1.5,
+        'circle-stroke-color': '#fff',
+        'circle-stroke-opacity': 0.25,
+      }});
+      // Short name label — visible at zoom 6+
+      map.addLayer({ id: 'adani-label', type: 'symbol', source: 'adani-assets', minzoom: 5, layout: {
+        'text-field': ['get','short'],
+        'text-size': ['interpolate',['linear'],['zoom'], 5,8, 9,11],
+        'text-font': ['Open Sans Bold'],
+        'text-offset': [0, 1.6], 'text-anchor': 'top',
+        'text-max-width': 10, 'text-allow-overlap': false,
+      }, paint: {
+        'text-color': ['get','color'],
+        'text-halo-color': '#000', 'text-halo-width': 1.2, 'text-opacity': 0.9,
+      }});
 
       // GDELT
       map.addLayer({ id: 'gdelt-dots', type: 'circle', source: 'gdelt', paint: {
@@ -455,6 +483,16 @@ function NakimeMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
       map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = ''; });
     });
+
+    // ── Adani Assets (opens AssetDetailModal) ──
+    map.on('click', 'adani-dots', e => {
+      if (!e.features?.length) return;
+      const p = e.features[0].properties as any;
+      map.getCanvas().style.cursor = '';
+      onEntityClick?.({ type: 'adani_asset', id: p.id });
+    });
+    map.on('mouseenter', 'adani-dots', () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'adani-dots', () => { map.getCanvas().style.cursor = ''; });
 
     // ── CCTV (opens CameraViewer panel) ──
     map.on('click', 'cctv-dots', e => {
@@ -817,6 +855,19 @@ function NakimeMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
     setGeo('jets', activeLayers.jets ? toFeatures(data.private_jets) : []);
     setGeo('military', activeLayers.military ? toFeatures(data.military_flights) : []);
   }, [mapReady, data.commercial_flights, data.private_flights, data.private_jets, data.military_flights, activeLayers.flights, activeLayers.private, activeLayers.jets, activeLayers.military]);
+
+  // ── Adani company assets ──
+  useEffect(() => {
+    if (!mapReady) return;
+    const assets: any[] = data.adani_assets ?? [];
+    setGeo('adani-assets', activeLayers.adani_assets !== false
+      ? assets.map((a: any) => ({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [a.lng, a.lat] },
+          properties: { id: a.id, name: a.name, short: a.short, color: a.color, type: a.type, status: a.status },
+        }))
+      : []);
+  }, [mapReady, data.adani_assets, activeLayers.adani_assets, setGeo]);
 
   // ── DECOUPLED LAYER RENDERERS (Performance Optimized) ──
 

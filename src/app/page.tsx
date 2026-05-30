@@ -14,6 +14,10 @@ import EmployeePanel from '@/components/EmployeePanel';
 import NetworkTrafficPanel from '@/components/NetworkTrafficPanel';
 import OfficePanel from '@/components/OfficePanel';
 import CyberNewsPanel from '@/components/CyberNewsPanel';
+import AssetBrowserPanel from '@/components/AssetBrowserPanel';
+import AssetDetailModal from '@/components/AssetDetailModal';
+import DashboardCustomizer, { DEFAULT_CONFIG, type DashboardConfig } from '@/components/DashboardCustomizer';
+import { ADANI_ASSETS, ASSET_TYPE_META } from '@/data/adani-assets';
 
 const NakimeMap = dynamic(() => import('@/components/NakimeMap'), { ssr: false });
 const LayerPanel = dynamic(() => import('@/components/LayerPanel'));
@@ -83,6 +87,9 @@ export default function Dashboard() {
   const [rightTab, setRightTab] = useState<'security'|'operations'|'intel'>('security');
   const [mapProjection, setMapProjection] = useState<'globe'|'mercator'>('globe');
   const [mapStyle, setMapStyle] = useState<'dark'|'satellite'>('dark');
+  // ── Adani enterprise ──
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+  const [dashConfig, setDashConfig] = useState<DashboardConfig>(DEFAULT_CONFIG);
 
   const isMobile = useIsMobile();
   const startTime = useRef(Date.now());
@@ -192,7 +199,8 @@ export default function Dashboard() {
 
 
   const handleEntityClick = useCallback((entity: any) => {
-    if (entity?.type === 'cctv') setActiveCamera(entity);
+    if (entity?.type === 'cctv')        setActiveCamera(entity);
+    if (entity?.type === 'adani_asset') setSelectedAssetId(entity.id);
   }, []);
 
   // ── SHARED FETCH UTILITY (Fixes #107 — single definition, not 3 copies) ──
@@ -212,6 +220,15 @@ export default function Dashboard() {
       setBackendStatus('error');
     }
   }, []);
+
+  // ── Inject static Adani asset data into the map data ref ──
+  useEffect(() => {
+    const features = ADANI_ASSETS.map(a => ({
+      ...a, color: ASSET_TYPE_META[a.type].color,
+    }));
+    dataRef.current = { ...dataRef.current, adani_assets: features };
+    setDataVersion(v => v + 1);
+  }, []);  // run once — static data
 
   // ── ENTERPRISE DATA: initial load + polling ──
   useEffect(() => {
@@ -546,76 +563,120 @@ export default function Dashboard() {
 
 
 
-      {/* ── LEFT HUD: Office navigator + enterprise layer toggles ── */}
+      {/* ── LEFT HUD: Asset browser + office maps + layers ── */}
       <div className="desktop-panel absolute left-5 top-20 bottom-24 w-72 flex flex-col gap-3 z-[200] pointer-events-auto overflow-y-auto styled-scrollbar pr-1">
         {/* Enterprise stats strip */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}
-          className="glass-panel px-3 py-2">
-          <div className="grid grid-cols-3 gap-2 text-center">
+          className="glass-panel px-3 py-2 shrink-0">
+          <div className="grid grid-cols-5 gap-1 text-center">
             <div>
               <div className="hud-label">AGENTS</div>
-              <div className="hud-value text-[11px] animate-data-pulse" style={{ color: 'var(--alert-green)' }}>
+              <div className="hud-value text-[10px] animate-data-pulse" style={{ color: 'var(--alert-green)' }}>
                 {(data as any).volt_agent_counts?.active ?? '—'}
               </div>
             </div>
             <div>
               <div className="hud-label">ALERTS</div>
-              <div className="hud-value text-[11px]" style={{ color: (data as any).volt_alert_stats?.critical > 0 ? 'var(--alert-red)' : 'var(--gold-primary)' }}>
+              <div className="hud-value text-[10px]" style={{ color: (data as any).volt_alert_stats?.critical > 0 ? 'var(--alert-red)' : 'var(--gold-primary)' }}>
                 {(data as any).volt_alert_stats?.total ?? '—'}
               </div>
             </div>
             <div>
               <div className="hud-label">STAFF</div>
-              <div className="hud-value text-[11px]" style={{ color: 'var(--cyan-primary)' }}>
+              <div className="hud-value text-[10px]" style={{ color: 'var(--cyan-primary)' }}>
                 {Array.isArray((data as any).volt_employees) ? (data as any).volt_employees.filter((e: any) => e.checked_in).length : '—'}
+              </div>
+            </div>
+            <div>
+              <div className="hud-label">ASSETS</div>
+              <div className="hud-value text-[10px]" style={{ color: 'var(--gold-primary)' }}>{ADANI_ASSETS.length}</div>
+            </div>
+            <div>
+              <div className="hud-label">SITES</div>
+              <div className="hud-value text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                {Array.from(new Set(ADANI_ASSETS.map(a => a.country))).length}
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Office floor plan navigator */}
-        <OfficePanel
-          onFlyTo={(lat, lng, zoom) => {
-            setFlyToLocation({ lat, lng, ts: Date.now() });
-            if (zoom) setMapView(v => ({ ...v, zoom }));
-          }}
-          onCameraOpen={setActiveCamera}
-        />
+        {/* Asset browser — search/filter Adani assets + fly to */}
+        {dashConfig.showAssetBrowser && (
+          <AssetBrowserPanel
+            selectedAssetId={selectedAssetId}
+            onSelectAsset={id => {
+              setSelectedAssetId(id);
+              const a = ADANI_ASSETS.find(x => x.id === id);
+              if (a) setFlyToLocation({ lat: a.lat, lng: a.lng, ts: Date.now() });
+            }}
+            onFlyTo={(lat, lng, zoom) => {
+              setFlyToLocation({ lat, lng, ts: Date.now() });
+              if (zoom) setMapView(v => ({ ...v, zoom }));
+            }}
+          />
+        )}
 
-        {/* Layer toggles */}
-        <LayerPanel data={data} activeLayers={activeLayers} setActiveLayers={setActiveLayers} />
+        {/* Office floor plan navigator */}
+        {dashConfig.showOfficeMap && (
+          <OfficePanel
+            onFlyTo={(lat, lng, zoom) => {
+              setFlyToLocation({ lat, lng, ts: Date.now() });
+              if (zoom) setMapView(v => ({ ...v, zoom }));
+            }}
+            onCameraOpen={setActiveCamera}
+          />
+        )}
+
+        {/* Enterprise layer toggles */}
+        {dashConfig.showLayerPanel && (
+          <LayerPanel data={data} activeLayers={activeLayers} setActiveLayers={setActiveLayers} />
+        )}
       </div>
 
-      {/* ── RIGHT HUD (desktop): Enterprise security/operations/intel ── */}
+      {/* ── RIGHT HUD (desktop): Enterprise tabs + customiser ── */}
       <div className="desktop-panel absolute right-5 top-20 bottom-24 w-80 flex flex-col gap-3 z-[200] pointer-events-auto overflow-y-auto styled-scrollbar pr-1">
 
-        {/* Search bar */}
-        <SearchBar onLocate={(lat, lng) => setFlyToLocation({ lat, lng, ts: Date.now() })} />
-
-        {/* Tab switcher */}
-        <div className="glass-panel p-0.5 flex gap-0.5 shrink-0">
-          {([
-            { id: 'security',   label: 'SECURITY',   color: 'rgba(255,59,48,0.12)',   active: 'rgba(255,59,48,0.18)',   text: '#ff3b30' },
-            { id: 'operations', label: 'OPERATIONS', color: 'rgba(0,229,255,0.08)',   active: 'rgba(0,229,255,0.14)',   text: '#00e5ff' },
-            { id: 'intel',      label: 'INTEL',      color: 'rgba(212,175,55,0.08)',  active: 'rgba(212,175,55,0.14)', text: '#d4af37' },
-          ] as const).map(tab => (
-            <button key={tab.id} onClick={() => setRightTab(tab.id)}
-              className="flex-1 py-1.5 rounded text-[9px] font-mono font-bold tracking-[0.15em] transition-all relative"
-              style={{
-                background: rightTab === tab.id ? tab.active : 'transparent',
-                color: rightTab === tab.id ? tab.text : 'var(--text-muted)',
-                border: `1px solid ${rightTab === tab.id ? tab.text + '50' : 'transparent'}`,
-              }}>
-              {tab.label}
-              {tab.id === 'security' && ((data as any).volt_alert_stats?.critical > 0) && (
-                <span className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-(--alert-red) animate-osiris-pulse" />
-              )}
-            </button>
-          ))}
+        {/* Search + customiser button in a row */}
+        <div className="flex gap-2 items-start shrink-0">
+          <div className="flex-1"><SearchBar onLocate={(lat, lng) => setFlyToLocation({ lat, lng, ts: Date.now() })} /></div>
+          <DashboardCustomizer config={dashConfig} onChange={setDashConfig} />
         </div>
 
+        {/* Tab switcher — only show enabled tabs */}
+        {(() => {
+          const tabs = [
+            dashConfig.showSecurityTab   && { id: 'security'   as const, label: 'SECURITY',   active: 'rgba(255,59,48,0.18)',  text: '#ff3b30' },
+            dashConfig.showOperationsTab && { id: 'operations' as const, label: 'OPERATIONS', active: 'rgba(0,229,255,0.14)',  text: '#00e5ff' },
+            dashConfig.showIntelTab      && { id: 'intel'      as const, label: 'INTEL',      active: 'rgba(212,175,55,0.14)', text: '#d4af37' },
+          ].filter(Boolean) as Array<{ id: typeof rightTab; label: string; active: string; text: string }>;
+
+          if (!tabs.length) return null;
+          // Auto-switch to first available tab if current is hidden
+          const activeTab = tabs.find(t => t.id === rightTab) ? rightTab : tabs[0].id;
+          if (activeTab !== rightTab) setRightTab(activeTab);
+
+          return (
+            <div className="glass-panel p-0.5 flex gap-0.5 shrink-0">
+              {tabs.map(tab => (
+                <button key={tab.id} onClick={() => setRightTab(tab.id)}
+                  className="flex-1 py-1.5 rounded text-[9px] font-mono font-bold tracking-[0.15em] transition-all relative"
+                  style={{
+                    background: rightTab === tab.id ? tab.active : 'transparent',
+                    color: rightTab === tab.id ? tab.text : 'var(--text-muted)',
+                    border: `1px solid ${rightTab === tab.id ? tab.text + '50' : 'transparent'}`,
+                  }}>
+                  {tab.label}
+                  {tab.id === 'security' && ((data as any).volt_alert_stats?.critical > 0) && (
+                    <span className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-(--alert-red) animate-osiris-pulse" />
+                  )}
+                </button>
+              ))}
+            </div>
+          );
+        })()}
+
         {/* SECURITY tab */}
-        {rightTab === 'security' && (
+        {rightTab === 'security' && dashConfig.showSecurityTab && (
           <>
             <SecurityAlertPanel />
             <SystemHealthPanel />
@@ -623,7 +684,7 @@ export default function Dashboard() {
         )}
 
         {/* OPERATIONS tab */}
-        {rightTab === 'operations' && (
+        {rightTab === 'operations' && dashConfig.showOperationsTab && (
           <>
             <EmployeePanel onLocate={(lat, lng) => setFlyToLocation({ lat, lng, ts: Date.now() })} />
             <NetworkTrafficPanel />
@@ -631,8 +692,19 @@ export default function Dashboard() {
         )}
 
         {/* INTEL tab */}
-        {rightTab === 'intel' && <CyberNewsPanel />}
+        {rightTab === 'intel' && dashConfig.showIntelTab && <CyberNewsPanel />}
       </div>
+
+      {/* ── ASSET DETAIL MODAL ── */}
+      <AssetDetailModal
+        assetId={selectedAssetId}
+        onClose={() => setSelectedAssetId(null)}
+        onFlyTo={(lat, lng, zoom) => {
+          setFlyToLocation({ lat, lng, ts: Date.now() });
+          if (zoom) setMapView(v => ({ ...v, zoom }));
+        }}
+        onCameraOpen={setActiveCamera}
+      />
 
       {/* ═══ MOBILE UI ═══ */}
       {isMobile && (
