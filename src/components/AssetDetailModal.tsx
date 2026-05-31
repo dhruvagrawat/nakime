@@ -1,8 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Camera, Users, Zap, Building2, Anchor, Plane, Video, VideoOff, ExternalLink, AlertTriangle, Activity } from 'lucide-react';
+import { X, MapPin, Camera, Users, Zap, Building2, Anchor, Plane, Video, VideoOff, AlertTriangle, Activity } from 'lucide-react';
 import { ASSET_BY_ID, ASSET_TYPE_META, STATUS_COLOR, type AdaniAsset } from '@/data/adani-assets';
+import { OFFICES } from '@/data/offices';
+import { FloorSVG } from './OfficePanel';
 
 interface Props {
   assetId: string | null;
@@ -25,9 +28,18 @@ const TYPE_ICON: Record<string, React.ReactNode> = {
   special_economic_zone:<MapPin className="w-4 h-4" />,
 };
 
+const OFFICE_TYPES = new Set(['hq','office','datacenter']);
+
+function matchOffice(asset: AdaniAsset) {
+  return OFFICES.find(o => o.city.toLowerCase() === asset.city.toLowerCase()) ?? null;
+}
+
 export default function AssetDetailModal({ assetId, onClose, onFlyTo, onCameraOpen }: Props) {
+  const [floorTab, setFloorTab] = useState(1);
   const asset: AdaniAsset | null = assetId ? (ASSET_BY_ID[assetId] ?? null) : null;
   const meta = asset ? ASSET_TYPE_META[asset.type] : null;
+  const matchedOffice = asset && OFFICE_TYPES.has(asset.type) ? matchOffice(asset) : null;
+  const officeFloor   = matchedOffice?.floors.find(f => f.floor === floorTab) ?? matchedOffice?.floors[0] ?? null;
 
   return (
     <AnimatePresence>
@@ -107,6 +119,29 @@ export default function AssetDetailModal({ assetId, onClose, onFlyTo, onCameraOp
             </div>
 
             <div className="p-5 grid md:grid-cols-2 gap-5">
+              {/* ── Office floor plan (only for office / hq / datacenter assets) ── */}
+              {matchedOffice && officeFloor && (
+                <div className="md:col-span-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="text-[8px] font-mono text-(--text-muted) tracking-widest">FLOOR PLAN</div>
+                    <div className="flex gap-1 ml-auto">
+                      {matchedOffice.floors.map(f => (
+                        <button key={f.floor} onClick={() => setFloorTab(f.floor)}
+                          className="px-2 py-0.5 rounded text-[7px] font-mono font-bold transition-all"
+                          style={{
+                            background: floorTab === f.floor ? 'rgba(212,175,55,0.12)' : 'transparent',
+                            color: floorTab === f.floor ? 'var(--gold-primary)' : 'var(--text-muted)',
+                            border: `1px solid ${floorTab === f.floor ? 'rgba(212,175,55,0.35)' : 'transparent'}`,
+                          }}>
+                          {f.label.split(' — ')[0]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <FloorSVG floor={officeFloor} employees={matchedOffice.employees} cameras={matchedOffice.cameras} heightPx={240} />
+                </div>
+              )}
+
               {/* ── Description ── */}
               <div className="md:col-span-2">
                 <div className="text-[8px] font-mono text-[var(--text-muted)] tracking-widest mb-2">FACILITY OVERVIEW</div>

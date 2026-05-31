@@ -8,14 +8,16 @@ import SearchBar from '@/components/SearchBar';
 import ScaleBar from '@/components/ScaleBar';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import KeyboardShortcuts from '@/components/KeyboardShortcuts';
-import SecurityAlertPanel from '@/components/SecurityAlertPanel';
-import SystemHealthPanel from '@/components/SystemHealthPanel';
+import SecurityAlertPanel, { type Alert } from '@/components/SecurityAlertPanel';
+import SystemHealthPanel, { type CheckResult } from '@/components/SystemHealthPanel';
 import EmployeePanel from '@/components/EmployeePanel';
 import NetworkTrafficPanel from '@/components/NetworkTrafficPanel';
 import OfficePanel from '@/components/OfficePanel';
 import CyberNewsPanel from '@/components/CyberNewsPanel';
 import AssetBrowserPanel from '@/components/AssetBrowserPanel';
 import AssetDetailModal from '@/components/AssetDetailModal';
+import AlertDetailModal from '@/components/AlertDetailModal';
+import OfficeFocusModal from '@/components/OfficeFocusModal';
 import DashboardCustomizer, { DEFAULT_CONFIG, type DashboardConfig } from '@/components/DashboardCustomizer';
 import { ADANI_ASSETS, ASSET_TYPE_META } from '@/data/adani-assets';
 
@@ -90,6 +92,9 @@ export default function Dashboard() {
   // ── Adani enterprise ──
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [dashConfig, setDashConfig] = useState<DashboardConfig>(DEFAULT_CONFIG);
+  // ── Detail modals ──
+  const [expandedAlert,   setExpandedAlert]   = useState<Alert | null>(null);
+  const [focusOfficeIdx,  setFocusOfficeIdx]  = useState<number | null>(null);
 
   const isMobile = useIsMobile();
   const startTime = useRef(Date.now());
@@ -624,6 +629,7 @@ export default function Dashboard() {
               if (zoom) setMapView(v => ({ ...v, zoom }));
             }}
             onCameraOpen={setActiveCamera}
+            onOfficeFocus={setFocusOfficeIdx}
           />
         )}
 
@@ -678,7 +684,7 @@ export default function Dashboard() {
         {/* SECURITY tab */}
         {rightTab === 'security' && dashConfig.showSecurityTab && (
           <>
-            <SecurityAlertPanel />
+            <SecurityAlertPanel onAlertExpand={setExpandedAlert} />
             <SystemHealthPanel />
           </>
         )}
@@ -699,6 +705,23 @@ export default function Dashboard() {
       <AssetDetailModal
         assetId={selectedAssetId}
         onClose={() => setSelectedAssetId(null)}
+        onFlyTo={(lat, lng, zoom) => {
+          setFlyToLocation({ lat, lng, ts: Date.now() });
+          if (zoom) setMapView(v => ({ ...v, zoom }));
+        }}
+        onCameraOpen={setActiveCamera}
+      />
+
+      {/* ── ALERT DETAIL MODAL ── */}
+      <AlertDetailModal
+        alert={expandedAlert}
+        onClose={() => setExpandedAlert(null)}
+      />
+
+      {/* ── OFFICE FOCUS MODAL ── */}
+      <OfficeFocusModal
+        officeIdx={focusOfficeIdx}
+        onClose={() => setFocusOfficeIdx(null)}
         onFlyTo={(lat, lng, zoom) => {
           setFlyToLocation({ lat, lng, ts: Date.now() });
           if (zoom) setMapView(v => ({ ...v, zoom }));
@@ -739,8 +762,8 @@ export default function Dashboard() {
                     <span className="text-[9px] font-mono text-foreground uppercase tracking-widest">{mobilePanel}</span>
                     <button onClick={() => setMobilePanel(null)} className="text-(--text-muted) p-1"><X className="w-4 h-4" /></button>
                   </div>
-                  {mobilePanel === 'office'     && <OfficePanel onFlyTo={(lat, lng, zoom) => { setFlyToLocation({ lat, lng, ts: Date.now() }); if (zoom) setMapView(v => ({ ...v, zoom })); setMobilePanel(null); }} onCameraOpen={setActiveCamera} />}
-                  {mobilePanel === 'security'   && <><SecurityAlertPanel /><SystemHealthPanel /></>}
+                  {mobilePanel === 'office'     && <OfficePanel onFlyTo={(lat, lng, zoom) => { setFlyToLocation({ lat, lng, ts: Date.now() }); if (zoom) setMapView(v => ({ ...v, zoom })); setMobilePanel(null); }} onCameraOpen={setActiveCamera} onOfficeFocus={setFocusOfficeIdx} />}
+                  {mobilePanel === 'security'   && <><SecurityAlertPanel onAlertExpand={setExpandedAlert} /><SystemHealthPanel /></>}
                   {mobilePanel === 'operations' && <><EmployeePanel onLocate={(lat, lng) => { setFlyToLocation({ lat, lng, ts: Date.now() }); setMobilePanel(null); }} /><NetworkTrafficPanel /></>}
                   {mobilePanel === 'intel'      && <CyberNewsPanel />}
                 </div>

@@ -1,14 +1,15 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { Globe2, MapPin, ChevronRight, Search } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Globe2, ChevronRight, ChevronDown, Search } from 'lucide-react';
 import { ADANI_ASSETS, ASSET_TYPE_META, STATUS_COLOR, type AdaniAsset, type AssetType } from '@/data/adani-assets';
 
 interface Props {
   onSelectAsset: (assetId: string) => void;
   onFlyTo?: (lat: number, lng: number, zoom?: number) => void;
   selectedAssetId?: string | null;
+  defaultCollapsed?: boolean;
 }
 
 type Region = 'all' | 'india' | 'international';
@@ -31,11 +32,12 @@ const TYPE_GROUPS: Array<{ id: AssetType | 'all'; label: string }> = [
   { id: 'mine',          label: 'Mining' },
 ];
 
-export default function AssetBrowserPanel({ onSelectAsset, onFlyTo, selectedAssetId }: Props) {
+export default function AssetBrowserPanel({ onSelectAsset, onFlyTo, selectedAssetId, defaultCollapsed = false }: Props) {
   const [region,  setRegion]  = useState<Region>('all');
   const [typeFilter, setTypeFilter] = useState<AssetType | 'all'>('all');
   const [search,  setSearch]  = useState('');
   const [country, setCountry] = useState<string>('all');
+  const [collapsed, setCollapsed] = useState(defaultCollapsed);
 
   const countries = useMemo(() => {
     const src = region === 'all' ? ADANI_ASSETS : ADANI_ASSETS.filter(a => a.region === region);
@@ -68,12 +70,19 @@ export default function AssetBrowserPanel({ onSelectAsset, onFlyTo, selectedAsse
       animate={{ opacity: 1, x: 0 }}
       className="glass-panel overflow-hidden flex flex-col"
     >
-      {/* Header */}
-      <div className="px-3 py-2.5 border-b border-[var(--border-primary)] flex items-center gap-2 shrink-0">
-        <Globe2 className="w-3.5 h-3.5 text-(--gold-primary)" />
-        <span className="text-[11px] font-mono font-bold tracking-[0.15em] text-(--text-heading)">ADANI ASSETS</span>
-        <span className="ml-auto text-[9px] font-mono text-(--text-muted)">{filtered.length} / {ADANI_ASSETS.length}</span>
-      </div>
+      {/* Header / collapse toggle */}
+      <button onClick={() => setCollapsed(c => !c)}
+        className="px-3 py-2.5 border-b border-(--border-primary) flex items-center gap-2 w-full shrink-0 hover:bg-white/2 transition-colors">
+        <Globe2 className="w-3.5 h-3.5 text-(--gold-primary) shrink-0" />
+        <span className="text-[11px] font-mono font-bold tracking-[0.15em] text-(--text-heading) flex-1 text-left">ADANI ASSETS</span>
+        <span className="text-[9px] font-mono text-(--text-muted)">{filtered.length} / {ADANI_ASSETS.length}</span>
+        <ChevronDown className={`w-3.5 h-3.5 text-(--text-muted) transition-transform duration-200 shrink-0 ${collapsed ? '-rotate-90' : ''}`} />
+      </button>
+
+      <AnimatePresence initial={false}>
+      {!collapsed && (
+      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+        exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden flex flex-col">
 
       {/* Region tabs */}
       <div className="flex border-b border-[var(--border-primary)] shrink-0">
@@ -194,7 +203,7 @@ export default function AssetBrowserPanel({ onSelectAsset, onFlyTo, selectedAsse
       </div>
 
       {/* Summary footer */}
-      <div className="px-3 py-1.5 border-t border-[var(--border-primary)]/30 flex items-center gap-3 shrink-0">
+      <div className="px-3 py-1.5 border-t border-(--border-primary)/30 flex items-center gap-3 shrink-0">
         {['port','airport','power_thermal','power_solar','power_wind','hq','office','datacenter','mine'].map(t => {
           const count = ADANI_ASSETS.filter(a => a.type === t && (region === 'all' || a.region === region)).length;
           if (!count) return null;
@@ -207,6 +216,10 @@ export default function AssetBrowserPanel({ onSelectAsset, onFlyTo, selectedAsse
           );
         })}
       </div>
+
+      </motion.div>
+      )}
+      </AnimatePresence>
     </motion.div>
   );
 }
