@@ -1,245 +1,299 @@
 <div align="center">
 
-# ⬡ NAKIME
+# ⬡ NAKIME VOLT
 
-### Open Source Intelligence & Reconnaissance Integrated System
+### Enterprise Cybersecurity Monitoring Platform
 
-[![Live Demo](https://img.shields.io/badge/osirisai.live-00E5FF?style=for-the-badge&logo=vercel&logoColor=white)](https://osirislive.app)
-[![Support OSIRIS](https://img.shields.io/badge/Support_Project-Patreon-FF424D?style=for-the-badge&logo=patreon&logoColor=white)](https://www.patreon.com/posts/159077425)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
+[![GitHub Stars](https://img.shields.io/github/stars/dhruvagrawat/nakime?style=for-the-badge&color=D4AF37)](https://github.com/dhruvagrawat/nakime/stargazers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-D4AF37?style=for-the-badge)](LICENSE)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](docker-compose.yml)
 [![MapLibre](https://img.shields.io/badge/MapLibre_GL-GPU_Rendered-396CB2?style=for-the-badge)](https://maplibre.org)
-[![License](https://img.shields.io/badge/License-MIT-D4AF37?style=for-the-badge)](LICENSE)
 
-**NAKIME is a real-time global intelligence dashboard that aggregates live flight tracking, CCTV networks, earthquake monitoring, conflict zone mapping, and 24/7 news feeds into a single GPU-accelerated interface.**
+**A self-hosted, GPU-accelerated enterprise security operations dashboard. Aggregates Wazuh SIEM, Suricata IDS, network traffic analytics, personnel presence, and physical asset tracking into a single real-time interface — deployable in minutes via Docker.**
 
-[Live Demo](https://osirisai.live) · [Report Bug](https://github.com/simplifaisoul/osiris/issues) · [Request Feature](https://github.com/simplifaisoul/osiris/issues) · [Join Discord](https://discord.gg/umBykEpb98)
+[Quick Start](#quick-start) · [Features](#features) · [Architecture](#architecture) · [Configuration](#configuration) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 </div>
 
 ---
 
-## Overview
+## What Is NAKIME VOLT?
 
-Nakime is a production-grade OSINT platform that provides situational awareness across multiple intelligence domains. Built with Next.js 16 and MapLibre GL, every data point is rendered via WebGL for 60fps performance even with thousands of concurrent entities on-screen.
+NAKIME VOLT is an open-source **Security Operations Centre (SOC) dashboard** designed for organisations managing distributed physical and digital infrastructure. It provides a single pane of glass across:
 
-### Key Capabilities
+- **Cyber threats** — Wazuh SIEM alerts, Suricata network intrusion events
+- **Infrastructure health** — live HTTP probe monitoring of all security tools
+- **Physical assets** — GPS-mapped ports, airports, power plants, offices, and data centres on a WebGL globe
+- **Personnel presence** — real-time office occupancy with 2D SVG floor plans per floor
+- **Camera feeds** — CCTV integration per facility, viewable directly in the dashboard
+- **Threat intelligence** — live CVE feed from CISA KEV / NVD
 
-| Domain | Data Points | Sources |
-|--------|------------|---------|
-| **Aviation** | Commercial, Private, Military, Jets | OpenSky Network |
-| **Maritime** | 39 Global Ports, 10 Chokepoints | Static Naval Intel |
-| **CCTV** | 2,000+ Cameras | TfL, WSDOT, Caltrans, NYC DOT, VicRoads + more |
-| **Seismic** | Real-time M2.5+ | USGS Earthquake API |
-| **Fires** | Active Hotspots | NASA FIRMS |
-| **News** | 24/7 Live Streams | 25+ Global Broadcasters |
-| **Weather** | Severe Events | NASA EONET |
-| **Space** | Solar Weather, Satellites | NOAA SWPC, N2YO |
-| **Cyber** | CVE Threats, Vulnerability Scanning | NVD, Custom Scanner |
-| **Conflict** | 13 Active Zones | Static OSINT Intel |
-| **Crypto** | BTC + ETH Wallet Tracing, OFAC SDN Match | blockstream.info, Blockscout, OpenSanctions |
-| **Sanctions** | Person / Org / Vessel SDN Search | OpenSanctions (US OFAC SDN mirror) |
-| **Telegram OSINT** | Geoparsed Posts from Public Channels | `t.me/s/<channel>` web preview |
+Everything runs **on-premise**. No data leaves your network. No cloud dependency required.
+
+---
+
+## Features
+
+### Security Operations
+
+| Feature | Description |
+|---------|-------------|
+| **Unified Alert Feed** | Wazuh + Suricata alerts normalised, severity-sorted, 10s polling |
+| **Alert Detail Popup** | Full event breakdown — src/dst IP, protocol, agent, groups, recommended response actions |
+| **Severity Filtering** | Critical / High / Medium / Low filter with live counts |
+| **System Health Monitor** | HTTP probe grid — configurable service list, latency display, 30s auto-refresh |
+| **CVE Threat Intel** | CISA KEV feed with vendor, product, due date, NVD links |
+
+### Asset & Facility Management
+
+| Feature | Description |
+|---------|-------------|
+| **Interactive Globe** | GPU-rendered WebGL map — 3D globe and 2D mercator modes |
+| **Asset Browser** | Global / India / International tabs, 9 asset-type filters, country grouping, search |
+| **Asset Detail Modal** | Click any map marker — facility info, cameras, staff count, floor plans for offices |
+| **Office Floor Plans** | SVG floor plans with real-time employee dots, camera icons, room colour coding |
+| **Office Focus Modal** | Full-screen floor plan: large SVG, floor tabs, camera list (click to open feed), full personnel roster |
+| **Fly-to Navigation** | Click any asset, office tab, or alert → map flies to that location |
+
+### Dashboard & UX
+
+| Feature | Description |
+|---------|-------------|
+| **Collapsible Panels** | Every section collapses to a title bar — reclaim screen space instantly |
+| **Dashboard Customiser** | Gear icon → right slide-out with panel toggles, map layer switches, quick presets |
+| **4 View Presets** | FULL VIEW · SECURITY OPS · EXECUTIVE · MINIMAL |
+| **Camera Viewer** | In-dashboard CCTV viewer accessible from any asset modal or floor plan |
+| **Keyboard Shortcuts** | `F` fullscreen · `G` globe/2D toggle · `R` reset view |
+| **Mobile Responsive** | Bottom-nav drawer layout for tablet and phone |
+
+### Deployment
+
+| Feature | Description |
+|---------|-------------|
+| **Docker Compose** | `docker compose up -d` brings up both services |
+| **Sample Data Mode** | `USE_SAMPLE_DATA=true` — full realistic demo without any real security tools |
+| **Zero Cloud Deps** | Fully air-gapped deployment possible |
+| **EC2 / VPS Ready** | Tested on AWS t3.medium, Ubuntu 24.04 LTS |
+| **CasaOS Compatible** | One-click install via CasaOS app store metadata |
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│                  NAKIME CLIENT                   │
-│  ┌──────────┐  ┌──────────┐  ┌───────────────┐ │
-│  │ MapLibre  │  │  HUD     │  │  RECON Toolkit│ │
-│  │  GL (GPU) │  │ Panels   │  │  Port Scan    │ │
-│  │  WebGL    │  │ Layers   │  │  DNS / WHOIS  │ │
-│  │  Render   │  │ Controls │  │  Vuln Scanner │ │
-│  └──────────┘  └──────────┘  └───────────────┘ │
-├─────────────────────────────────────────────────┤
-│               NEXT.JS API ROUTES                 │
-│  /api/flights         /api/earthquakes          │
-│  /api/cctv            /api/news                 │
-│  /api/fires           /api/maritime             │
-│  /api/gdelt           /api/satellites           │
-│  /api/weather         /api/scanner              │
-│  /api/sentinel        /api/telegram-feed        │
-│  /api/osint/*  (whois, dns, ip, cve, sanctions, │
-│                 crypto, sweep, threats, …)      │
-├─────────────────────────────────────────────────┤
-│              EXTERNAL DATA SOURCES               │
-│  OpenSky · USGS · NASA · NOAA · TfL · NVD      │
-│  GDACS · EONET · FIRMS · N2YO · RSS Feeds      │
-│  blockstream.info · Blockscout · OpenSanctions  │
-│  t.me public previews                            │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                       BROWSER CLIENT                         │
+│                                                              │
+│  ┌──────────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │  MapLibre GL     │  │  Left Panel  │  │ Right Panel  │  │
+│  │  WebGL Globe     │  │  • Assets    │  │ • Security   │  │
+│  │  Asset Markers   │  │  • Offices   │  │ • Operations │  │
+│  │  Click Handlers  │  │  • Layers    │  │ • Intel      │  │
+│  └──────────────────┘  └──────────────┘  └──────────────┘  │
+└─────────────────────────────┬────────────────────────────────┘
+                              │  fetch / polling
+┌─────────────────────────────▼────────────────────────────────┐
+│                   NEXT.JS 16 APP SERVER                       │
+│                                                              │
+│  /api/volt/alerts    → aggregates Wazuh + Suricata           │
+│  /api/volt/agents    → Wazuh agent roster + counts           │
+│  /api/volt/health    → async HTTP probe runner               │
+│  /api/volt/employees → in-memory personnel presence store    │
+│  /api/volt/traffic   → ntopng throughput + top talkers       │
+│  /api/cyber-threats  → CISA KEV + NVD CVE feed               │
+└─────────────────────────────┬────────────────────────────────┘
+                              │  HTTP (internal Docker bridge)
+┌─────────────────────────────▼────────────────────────────────┐
+│               VOLT-SERVER  (Python FastAPI)                   │
+│                                                              │
+│  wazuh.py      — JWT auth cache → /agents /alerts /stats     │
+│  suricata.py   — tails eve.json → alert / stats / flow       │
+│  health.py     — async httpx probe per service               │
+│  employees.py  — in-memory presence store, auto-seed         │
+│  ntopng.py     — ntopng REST v2 proxy                        │
+│  splunk.py     — Splunk search job proxy                     │
+└──────────────────────────────────────────────────────────────┘
 ```
 
----
+### Technology Stack
 
-## Features
-
-### Intelligence Layers
-- **16 toggleable data layers** with real-time entity counts
-- **GPU-accelerated rendering** — all map data rendered via WebGL, not DOM
-- **Progressive loading** — data fetched on-demand when layers are activated
-- **Viewport-aware** — only loads relevant data for the visible region
-
-### RECON Toolkit
-- **Port Scanner** — TCP connect scan with service fingerprinting
-- **DNS Lookup** — Full record resolution (A, AAAA, MX, NS, TXT, CNAME)
-- **WHOIS** — Domain/IP registration data (auto-cross-checked against OFAC SDN)
-- **SSL/TLS Inspector** — Certificate chain analysis
-- **IP Intelligence** — Geolocation, ASN, threat reputation (auto-cross-checked against OFAC SDN)
-- **Vulnerability Scanner** — CVE lookup against NVD database
-- **Crypto Wallet Trace** — BTC + ETH lookup (balance, tx history, OFAC SDN sanctions flag)
-- **OFAC Sanctions Search** — query persons, organizations, vessels and aircraft against the US OFAC SDN list
-
-### Live Broadcast Network
-- **25+ live 24/7 news streams** from global broadcasters
-- Click any news dot on the map to open the live stream
-- Feeds from NBC, CBS, ABC, Sky News, Al Jazeera, France 24, NHK, WION, and more
-
-### Telegram OSINT Layer
-- **Public-channel feed** scraped from the unauthenticated `t.me/s/<channel>` web preview — no Bot API token, no MTProto
-- Default curated set of 5 channels (EN + RU/UA war reporting), overridable via `OSIRIS_TELEGRAM_CHANNELS`
-- Posts are geoparsed against a multilingual place dictionary (EN + Cyrillic + Arabic) and plotted on the map
-- Click any cyan dot to read the post and jump to the original on Telegram
-
-### Crypto Wallet Intelligence
-- **BTC** lookups via [blockstream.info](https://blockstream.info) (Esplora API, keyless)
-- **ETH** lookups via [Blockscout](https://github.com/blockscout/blockscout)'s public ETH instance (`eth.blockscout.com`, keyless)
-- Every lookup is cross-checked against the OFAC SDN sanctioned-address list (mirrored from [`0xB10C/ofac-sanctioned-digital-currency-addresses`](https://github.com/0xB10C/ofac-sanctioned-digital-currency-addresses))
-- Sanctioned wallets surface a red **SANCTIONED — OFAC SDN** badge in the RECON panel
-
-### OFAC SDN Cross-Check
-- Standalone `SANCTIONS` tab in the RECON toolkit — full-text search across persons, organisations, vessels and aircraft
-- WHOIS and IP-intel routes auto-cross-check registrant / ASN-owner names against the SDN list and surface an inline alert
-- Data sourced from [OpenSanctions](https://www.opensanctions.org) (CC-BY 4.0) — keyless, ~7 MB cached in-memory for 24h
-
-### Conflict Zone Monitoring
-- **13 active conflict/tension zones** with severity-coded warning markers
-- Active Wars: Ukraine, Gaza, Sudan, Myanmar, DRC, Yemen
-- High Tension: Syria, Lebanon, Sahel, Somalia, Red Sea
-- Elevated: Taiwan Strait, Korean DMZ
-
-### Performance Optimized
-- **75% reduction in edge requests** vs initial release
-- Aggressive polling relaxation (15-30 min intervals for stable data)
-- Static data served from memory (zero external API calls for news feeds)
-- `layerFetchedRef` prevents duplicate API requests
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 16 (App Router, Turbopack), TypeScript 5, Tailwind CSS v4 |
+| Map | MapLibre GL JS — WebGL GPU rendering |
+| Animations | Framer Motion |
+| Backend | Python 3.12, FastAPI, uvicorn |
+| Security integrations | Wazuh SIEM, Suricata IDS, ntopng, Splunk |
+| Containerisation | Docker, Docker Compose v2 |
+| Deployment targets | AWS EC2, bare-metal VPS, CasaOS |
 
 ---
 
 ## Quick Start
 
+### Option A — Docker Compose (recommended)
+
 ```bash
-git clone https://github.com/simplifaisoul/osiris.git
-cd osiris
+# 1. Clone the repository
+git clone https://github.com/dhruvagrawat/nakime.git
+cd nakime
+git checkout volt
+
+# 2. Start with sample data (no real security tools required)
+docker compose up -d
+
+# 3. Open the dashboard
+open http://localhost:3000
+```
+
+> **First build:** ~3 minutes (compiles Next.js). Subsequent starts use Docker layer cache and take ~10 seconds.
+
+### Option B — Local Development
+
+```bash
+# Terminal 1 — Frontend
 npm install
 npm run dev
+# http://localhost:3000
+
+# Terminal 2 — Backend
+cd volt-server
+pip install -r requirements.txt
+USE_SAMPLE_DATA=true uvicorn main:app --reload --port 8000
 ```
-
-Open [http://localhost:3000](http://localhost:3000)
-
-### Docker / Self-Hosting
-
-```bash
-git clone https://github.com/simplifaisoul/osiris.git
-cd osiris
-cp .env.template .env     # optional — configure keys / port
-docker compose up -d
-```
-
-Open [http://localhost:3000](http://localhost:3000). The image is a multi-stage
-`node:22-alpine` standalone build (~220 MB, non-root). The compose file also
-carries CasaOS app metadata (`x-casaos:`) for one-click install on
-[CasaOS](https://casaos.io). See **[DOCKER.md](DOCKER.md)** for the full Docker,
-CasaOS and API-key guide.
-
-**Prebuilt image (GHCR)** — skip the build and pull it directly:
-
-```bash
-docker pull ghcr.io/aiacos/osiris:latest
-docker run -d -p 3000:3000 --env-file .env ghcr.io/aiacos/osiris:latest
-```
-
-**Custom port** — the container always listens on `3000`; set `NAKIME_PORT` in
-`.env` to change the published host port (e.g. `NAKIME_PORT=3005`) without
-editing the compose file.
-
-### Environment Variables
-
-NAKIME works **partially without any API keys** — all core feeds use public,
-keyless sources. Copy [`.env.template`](.env.template) to `.env` and set only
-what you need:
-
-```env
-# Published host port (container always listens on 3000). Default: 3000
-NAKIME_PORT=3000
-
-# RECON scanner backend (the only vars the current code reads).
-# SCANNER_KEY must match the backend's NAKIME_KEY — generate with: openssl rand -hex 32
-SCANNER_URL=
-SCANNER_KEY=
-
-# Optional, for higher rate limits / future sources (see DOCKER.md for signup links)
-FIRMS_API_KEY=                # NASA FIRMS  — firms.modaps.eosdis.nasa.gov/api/map_key/
-OPENSKY_CLIENT_ID=            # OpenSky OAuth2 (since Mar 2025) — opensky-network.org
-OPENSKY_CLIENT_SECRET=
-N2YO_API_KEY=                 # N2YO satellites — n2yo.com (Profile → API key)
-AIS_API_KEY=                 # aisstream.io maritime
-```
-
-> Without `SCANNER_URL`/`SCANNER_KEY` the RECON toolkit returns `503`; every
-> other layer works out of the box. `.env` is gitignored — only the template is committed.
 
 ---
 
-## Tech Stack
+## Configuration
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16 (App Router, Turbopack) |
-| Language | TypeScript 5 |
-| Map Engine | MapLibre GL JS (WebGL) |
-| Animations | Framer Motion |
-| Icons | Lucide React |
-| Styling | Custom CSS Design System |
-| Deployment | Vercel Edge Network |
+Copy the environment template and fill in what applies to your setup:
+
+```bash
+cp .env.template .env
+# edit .env
+```
+
+### volt-server variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `USE_SAMPLE_DATA` | `true` | Return demo data — no real tools needed |
+| `WAZUH_URL` | — | `https://your-wazuh-manager:55000` |
+| `WAZUH_USER` | — | Wazuh API username |
+| `WAZUH_PASS` | — | Wazuh API password |
+| `SURICATA_EVE_PATH` | `/var/log/suricata/eve.json` | Path to Suricata EVE JSON |
+| `NTOPNG_URL` | — | `http://your-ntopng:3000` |
+| `NTOPNG_USER` | `admin` | ntopng username |
+| `NTOPNG_PASS` | — | ntopng password |
+| `SPLUNK_URL` | — | Splunk base URL |
+| `SPLUNK_TOKEN` | — | Splunk bearer token |
+
+### Connecting real security tools
+
+**Wazuh** — set `WAZUH_URL`, credentials, and `USE_SAMPLE_DATA=false`.
+
+**Suricata** — uncomment the volume mount in `docker-compose.yml`:
+```yaml
+volumes:
+  - /var/log/suricata/eve.json:/var/log/suricata/eve.json:ro
+```
 
 ---
 
-## Keyboard Shortcuts
+## Customising for Your Organisation
 
-| Key | Action |
-|-----|--------|
-| `F` | Toggle flight layers |
-| `E` | Toggle earthquakes |
-| `S` | Toggle satellites |
-| `D` | Toggle day/night cycle |
-| `Escape` | Close panels |
+### Assets (map markers)
+
+Edit [`src/data/adani-assets.ts`](src/data/adani-assets.ts) — replace the 32 sample assets with your organisation's facilities:
+
+```typescript
+export const MY_ASSETS: AdaniAsset[] = [
+  {
+    id: 'hq-london',
+    name: 'London Headquarters',
+    short: 'LON HQ',
+    type: 'hq',
+    region: 'international',
+    country: 'United Kingdom',
+    city: 'London',
+    lat: 51.5074, lng: -0.1278,
+    status: 'operational',
+    cameras: [
+      { id: 'lon-cam-1', name: 'Main Entrance', status: 'online' },
+    ],
+  },
+];
+```
+
+### Floor plans
+
+Edit [`src/data/offices.ts`](src/data/offices.ts) — define rooms as rectangles in a 400×280 SVG coordinate space:
+
+```typescript
+{ id: 'room-1', name: 'Reception', x: 0, y: 0, w: 200, h: 60, type: 'reception' }
+```
+
+---
+
+## Deploying to AWS EC2
+
+**Recommended:** t3.medium (2 vCPU, 4 GB RAM), Ubuntu 24.04 LTS, 30 GB gp3 volume.
+
+```bash
+# Install Docker
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker ubuntu
+
+# Deploy
+git clone https://github.com/dhruvagrawat/nakime.git
+cd nakime && git checkout volt
+sudo docker compose up -d --build
+```
+
+Open inbound ports `3000` (dashboard) and optionally `8000` (API) in your EC2 security group.
+
+**Update to latest:**
+```bash
+cd ~/nakime && git pull && sudo docker compose up -d --build
+```
+
+---
+
+## Roadmap
+
+- [ ] Role-based access control (RBAC) — analyst / operator / admin roles
+- [ ] Alert acknowledgement and ticketing integration
+- [ ] Wazuh active response trigger from dashboard
+- [ ] Webhook outbound — Slack, PagerDuty, Microsoft Teams
+- [ ] MITRE ATT&CK mapping on alert detail view
+- [ ] Multi-tenancy — multiple organisations in one instance
+- [ ] Grafana panel embedding
+- [ ] Mobile app (React Native)
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). All contributions welcome — bug fixes, new integrations, UI improvements, and documentation.
+
+---
+
+## Security
+
+To report a security vulnerability, see [SECURITY.md](SECURITY.md). Please do not open public GitHub issues for security vulnerabilities.
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](LICENSE). Free for commercial and non-commercial use. Attribution appreciated but not required.
 
 ---
 
 <div align="center">
 
-**🛠️ SUPPORT THE NAKIME PROJECT**
-The NAKIME Global Intelligence Grid is entirely open-source, but running the backend scanners and data firehoses isn't cheap.
-
-If you want to help keep the servers alive, and support us to get access to better tools  unlock the **Special NAKIME Console**, Currently Just a Cool UI. a you can officially support the project here : 
-
-🔗 [Support NAKIME on Patreon](https://www.patreon.com/posts/159077425)
-
-*Supporters receive the `🔴 RedTeam Console` role and access to encrypted developer comms.*
-
-
-**Built by [simplifaisoul](https://github.com/simplifaisoul)**
-
-[Join our Discord to be a part of this movement!](https://discord.gg/umBykEpb98)
+Built by [Dhruv Agrawal](https://github.com/dhruvagrawat) &nbsp;·&nbsp; [Report a Bug](https://github.com/dhruvagrawat/nakime/issues) &nbsp;·&nbsp; [Request a Feature](https://github.com/dhruvagrawat/nakime/issues)
 
 </div>
